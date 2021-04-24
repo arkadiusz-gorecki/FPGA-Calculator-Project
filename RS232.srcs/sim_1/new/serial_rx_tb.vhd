@@ -33,7 +33,8 @@ begin
  process is							-- proces bezwarunkowy
   begin								-- czesc wykonawcza procesu
     R <= '1'; wait for 100 ns;					-- ustawienie sygnalu 'res' na '1' i odczekanie 100 ns
-    R <= '0'; wait;						-- ustawienie sygnalu 'res' na '0' i zatrzymanie
+    R <= '0'; wait for 1000 ns;						-- ustawienie sygnalu 'res' na '0' i zatrzymanie
+        R <= '1'; wait for 100 ns;					-- ustawienie sygnalu 'res' na '1' i odczekanie 100 ns
   end process;							-- zakonczenie procesu
 
   process is							-- proces bezwarunkowy
