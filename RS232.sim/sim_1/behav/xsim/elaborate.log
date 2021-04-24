@@ -14,6 +14,6 @@ Compiling package ieee.std_logic_arith
 Compiling package ieee.std_logic_unsigned
 Compiling package synopsys.attributes
 Compiling package ieee.std_logic_misc
-Compiling architecture behavioral of entity xil_defaultlib.SERIAL_RX [\SERIAL_RX(data_l=8,parity_l=1,s...]
+Compiling architecture behavioral of entity xil_defaultlib.SERIAL_RX [\SERIAL_RX(baudrate=5000000,data...]
 Compiling architecture behavioural of entity xil_defaultlib.serial_rx_tb
 Built simulation snapshot SERIAL_RX_TB_behav

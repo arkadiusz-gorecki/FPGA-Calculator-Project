@@ -33,8 +33,7 @@ begin
  process is							-- proces bezwarunkowy
   begin								-- czesc wykonawcza procesu
     R <= '1'; wait for 100 ns;					-- ustawienie sygnalu 'res' na '1' i odczekanie 100 ns
-    R <= '0'; wait for 1000 ns;						-- ustawienie sygnalu 'res' na '0' i zatrzymanie
-        R <= '1'; wait for 100 ns;					-- ustawienie sygnalu 'res' na '1' i odczekanie 100 ns
+    R <= '0'; wait;				-- ustawienie sygnalu 'res' na '1' i odczekanie 100 ns
   end process;							-- zakonczenie procesu
 
   process is							-- proces bezwarunkowy
@@ -79,8 +78,8 @@ begin
       DATA_L               => B_SLOWA,				-- liczba bitow slowa danych (5-8)
       PARITY_L             => B_PARZYSTOSCI,			-- liczba bitow parzystosci (0-1)
       STOP_L               => B_STOPOW,				-- liczba bitow stopu (1-2)
-      N_RX                 => N_RX,				-- negacja logiczna sygnalu szeregowego
-      N_SLOWO              => N_SLOWO				-- negacja logiczna slowa danych
+      NEG_RX               => N_RX,				-- negacja logiczna sygnalu szeregowego
+      NEG_DATA_PAR         => N_SLOWO				-- negacja logiczna slowa danych
     )
     port map(							-- mapowanie sygnalow do portow
       R                    => R,				-- sygnal resetowania

@@ -45,6 +45,7 @@ begin
         variable data_read : natural := 0; -- how many Rx data bits are already read
         variable stop_read : natural := 0; -- how many stop bits are already read
         variable bit_1_count : natural := 0; -- how many '1' bits are already read (needed for parity check)
+        variable RX_BUF : std_logic; -- stores RX but negated if NEG_RX set to TRUE
     begin
         if R = '1' then
             READY <= '0';
@@ -56,9 +57,12 @@ begin
             stop_read := 0;
             bit_1_count := 0;
         elsif rising_edge(C) then
+            RX_BUF := RX;
+            if(NEG_RX = TRUE) then RX_BUF := not(RX); end if;
+                          
             case curr_state is
                 when WAITING =>
-                    if RX = '1' then
+                    if RX_BUF = '1' then
                         curr_state := START;
                         READY <= '0'; -- we start to read another data so it is not ready now
                         DATA <= reset_vector; -- set to "UUUUUUUU"
@@ -73,11 +77,17 @@ begin
                     end if;
                 when READ =>
                     currT := currT + 1;
-    
                     if currT >= T then
                         currT := 0;
-                        DATA(data_read) <= RX; -- write one input bit to output vector
-                        if RX = '1' then bit_1_count := bit_1_count + 1; end if; -- count how many '1' bits there are (needed for parity check)
+                        case NEG_DATA_PAR is
+                            when FALSE =>
+                                DATA(data_read) <= RX_BUF; -- write one input bit to output vector
+                                if RX_BUF = '1' then bit_1_count := bit_1_count + 1; end if; -- count how many '1' bits there are (needed for parity check)  
+                            when TRUE => -- same as previous but RX is negated
+                                DATA(data_read) <= not(RX_BUF);
+                                if RX_BUF = '0' then bit_1_count := bit_1_count + 1; end if;
+                        end case;
+                        
                         data_read := data_read + 1;
                         if data_read >= DATA_L then
                             case PARITY_L is
@@ -92,10 +102,18 @@ begin
                     
                     if currT >= T then
                         currT := 0;
-                        if (RX = '0' and bit_1_count mod 2 = 1) or
-                           (RX = '1' and bit_1_count mod 2 = 0) then
-                           ERR <= '1';
-                        end if;
+                        case NEG_DATA_PAR is
+                            when FALSE =>
+                                if (RX_BUF = '0' and bit_1_count mod 2 = 1) or
+                                   (RX_BUF = '1' and bit_1_count mod 2 = 0) then
+                                   ERR <= '1';
+                                end if;
+                            when TRUE =>
+                                if (RX_BUF = '1' and bit_1_count mod 2 = 1) or
+                                   (RX_BUF = '0' and bit_1_count mod 2 = 0) then
+                                   ERR <= '1';
+                                end if;
+                        end case;
                         curr_state := STOP;
                     end if;  
                 when STOP =>
@@ -103,7 +121,7 @@ begin
                     
                     if currT >= T then
                         currT := 0;
-                        if RX = '1' then ERR <= '1'; end if;
+                        if RX_BUF = '1' then ERR <= '1'; end if;
                         stop_read := stop_read + 1; -- how many stop bits already read
                         if stop_read >= STOP_L then
                             curr_state := WAITING;
