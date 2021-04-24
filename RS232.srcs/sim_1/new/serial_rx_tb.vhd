@@ -73,11 +73,11 @@ begin
   
   SERIAL_RX_INST: entity work.SERIAL_RX				-- instancja odbiornika szeregowego 'SERIAL_RX'
     generic map(						-- mapowanie parametrow biezacych
-      F_ZEGARA             => F_ZEGARA,				-- czestotliwosc zegata w [Hz]
-      L_BODOW              => L_BODOW,				-- predkosc odbierania w [bodach]
-      B_SLOWA              => B_SLOWA,				-- liczba bitow slowa danych (5-8)
-      B_PARZYSTOSCI        => B_PARZYSTOSCI,			-- liczba bitow parzystosci (0-1)
-      B_STOPOW             => B_STOPOW,				-- liczba bitow stopu (1-2)
+      CLOCK_F              => F_ZEGARA,				-- czestotliwosc zegata w [Hz]
+      BAUDRATE             => L_BODOW,				-- predkosc odbierania w [bodach]
+      DATA_L               => B_SLOWA,				-- liczba bitow slowa danych (5-8)
+      PARITY_L             => B_PARZYSTOSCI,			-- liczba bitow parzystosci (0-1)
+      STOP_L               => B_STOPOW,				-- liczba bitow stopu (1-2)
       N_RX                 => N_RX,				-- negacja logiczna sygnalu szeregowego
       N_SLOWO              => N_SLOWO				-- negacja logiczna slowa danych
     )
@@ -85,9 +85,9 @@ begin
       R                    => R,				-- sygnal resetowania
       C                    => C,				-- zegar taktujacy
       RX                   => RX,				-- odebrany sygnal szeregowy
-      SLOWO                => SLOWO,				-- odebrane slowo danych
-      GOTOWE               => GOTOWE,				-- flaga potwierdzenia odbioru
-      BLAD                 => BLAD				-- flaga wykrycia bledu w odbiorze
+      DATA                 => SLOWO,				-- odebrane slowo danych
+      READY                => GOTOWE,				-- flaga potwierdzenia odbioru
+      ERR                  => BLAD				-- flaga wykrycia bledu w odbiorze
     );
 
 end behavioural;
