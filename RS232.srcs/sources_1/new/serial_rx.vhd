@@ -40,6 +40,7 @@ begin
         variable curr_state : state := WAITING;
         variable data_read : natural := 0; -- how many Rx data bits already read
         variable stop_read : natural := 0;
+        variable bit_1_count : natural := 0;
     begin
         -- narpierw trzeba zrobiæ offset T/2 ¿eby po œrodku szczytywaæ a dopiero potem normalnie wystartowaæ z okresami co T
         case curr_state is
@@ -59,6 +60,7 @@ begin
 
                 if currT >= T then
                     DATA(data_read) <= RX;
+                    if RX = '1' then bit_1_count := bit_1_count + 1; end if; -- count how many '1' bits there are (needed for parity check)
                     data_read := data_read + 1;
                     currT := 0;
                     if data_read >= DATA_L then
@@ -68,12 +70,26 @@ begin
                         end case;                            
                     end if;     
                 end if;           
-            when PARITY => -- !!!niedokoñczone
+            when PARITY =>
                 currT := currT + 1;
                 if currT >= T then
                     currT := 0;
+                    if (RX = '0' and bit_1_count mod 2 = 1) or
+                       (RX = '1' and bit_1_count mod 2 = 0) then
+                       ERR <= '1';
+                    end if;
+                    curr_state := STOP;
                 end if;  
             when STOP =>
+                currT := currT + 1;
+                if currT >= T then
+                    currT := 0;
+                    if RX = '1' then ERR <= '1'; end if; -- stop bits should be '0'
+                    stop_read := stop_read + 1;
+                    if stop_read >= STOP_L then
+                        curr_state := WAITING;
+                    end if;     
+                end if;           
         end case;
                  
     end process;
