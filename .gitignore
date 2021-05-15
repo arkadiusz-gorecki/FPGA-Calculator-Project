@@ -1,1 +1,6 @@
-/RS232.sim
+# Ignore everything
+*
+
+# except
+!RS232.srcs
+!RS232.xpr
