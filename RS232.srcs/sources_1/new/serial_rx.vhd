@@ -1,15 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity SERIAL_RX is
     generic (
         CLOCK_F : natural := 20_000_000;
@@ -21,9 +12,10 @@ entity SERIAL_RX is
         NEG_DATA_PAR : boolean := FALSE -- if input DATA and PARITY bits are negated
     );
     port (
-        R : in std_logic;
-        C : in std_logic;
+        RESET : in std_logic;
+        CLOCK : in std_logic;
         RX : in std_logic;
+        
         DATA : out std_logic_vector (DATA_L - 1 downto 0);
         READY : out std_logic;
         ERR :out std_logic
@@ -37,7 +29,7 @@ architecture Behavioral of SERIAL_RX is
     signal parity : std_logic := '0';
     signal stop : std_logic := '0';
 begin
-    process(R, C) is
+    process(RESET, CLOCK) is
         constant T : natural := CLOCK_F / BAUDRATE; -- clock ticks per one bit availability frame
         variable currT : natural := 0; -- how many clock ticks have passed already
         variable data_read : natural := 0; -- how many Rx data bits are already read
@@ -46,7 +38,7 @@ begin
         variable RX_BUF : std_logic; -- stores RX but negated if NEG_RX set to TRUE
 
     begin
-        if R = '1' then
+        if RESET = '1' then
             READY <= '0';
             DATA <= (others => '0');
             ERR <= '0';
@@ -55,7 +47,7 @@ begin
             data_read := 0;
             stop_read := 0;
             bit_1_count := 0;
-        elsif rising_edge(C) then
+        elsif rising_edge(CLOCK) then
             RX_BUF := RX;
             if(NEG_RX = TRUE) then RX_BUF := not(RX); end if;
             

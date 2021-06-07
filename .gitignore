@@ -2,5 +2,5 @@
 *
 
 # except
-!RS232.srcs
+!RS232.srcs/*
 !RS232.xpr
