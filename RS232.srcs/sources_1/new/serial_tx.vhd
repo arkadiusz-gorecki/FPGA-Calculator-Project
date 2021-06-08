@@ -14,13 +14,13 @@ entity SERIAL_TX is
         NEG_DATA_PAR : boolean := FALSE -- if output DATA and PARITY bits are negated
     );
     port (
-        CLOCK     : in std_logic;
         RESET     : in std_logic;
+        CLOCK     : in std_logic;
         DATA      : in std_logic_vector (DATA_L - 1 downto 0);
         IN_VALID  : in std_logic;
 
         TX        : out std_logic;
-        ACCEPT_IN : out std_logic
+        ACCEPT_IN : out std_logic 
     );
 end SERIAL_TX;
 
