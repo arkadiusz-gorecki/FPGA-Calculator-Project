@@ -57,6 +57,7 @@ begin
     process (current_state, SEND, data_counter)
         variable bit_1_count : std_logic := '0'; -- parity check
         variable TX_BUF : std_logic;
+        variable stop_l : natural := 0;
     begin
         case current_state is
             when reset_state =>
@@ -94,8 +95,8 @@ begin
                 if (data_counter = DATA_L - 1) then
                     if (PARITY_L = 1) then
                         next_state <= parity_bit;
---                    else -- To jest nieosiągalny kod
---                        next_state <= stop_bit;
+                    else -- To jest nieosiągalny kod
+                        next_state <= stop_bit;
                     end if;
                 else
                     next_state <= send_data;
@@ -116,9 +117,11 @@ begin
             when stop_bit =>
                 SENDING <= '1';
                 TX <= '1';
+                stop_l := stop_l + 1;
 
-                if (STOP_L = 1) then
+                if (stop_l = STOP_L) then
                     next_state <= idle;
+                    stop_l := 0;
                 else
                     next_state <= stop_bit;
                 end if;
