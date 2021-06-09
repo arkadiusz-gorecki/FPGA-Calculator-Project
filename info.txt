@@ -1,0 +1,53 @@
+Temat projektu:
+1. Kalkulator z UART TX i RX. Dane podawane w formacie ASCII. Działania: +,-, mnożnenie (może być potęgowanie). Komponenty konwertera ASCII->binarne dane, binarne dane-> ASCII. Testbench
+może być zastosowany z wykładu. Działania podawane jako bezpośrednio wpisane w testbench lub np. ładowane z pliku. Do określenia w ramach zespołu liczba cyfr każego argumentu, zakres
+obliczeń (rejestry). Na korzysyć rozwiązania uniwersalne (np. nieogarniczona liczba agrumentów). Podstawowe założenie: dwa argumenty, liczby ze znakiem, np. 3 pozycje+znak, Rejestr 8 bitowy
+(akumulatora).
+
+ 
+
+2. Projekt "pośredni" na niższą ocenę: kalkulator UART RX/TX realizujący dodawanie +1 na danych wejściowych i zwracający wynik. Format danych binarny lub ASCII (ale wskazany ASCII). 
+
+ 
+
+3. Projekt na 3.0 z koniecznością egzaminu ustnego-> sterowanie diodami LED (wirtualnymi) - np. przełączany układ diod, kolejno zapalane diody ORAZ sterowanie PWM natężeniem diody (zmienny
+współczynnik wypełnienia fali prostokątnej).
+
+ 
+
+Projekt maksymalnie na 70 pkt. Powyżej 49 pkt zwolnienie z egzaminu na ocenę 4.0
+
+ 
+
+Zasady realizacji projektu:
+1. Z ustalenia z Prowadzącym przedmiot, obrona projektu musi odbywać się przed kamerą internetową (2 osoby widoczne)
+
+ 
+
+2. Ponieważ możecie Państwo zdobyć zwolnienie z egzaminu (oraz obrony projektu), jednym z istotnych czynników będzie przygotowanie wysokiej jakości dokumentacji (np. zaznaczenie na
+symulacji określonych ramek danych, klarowne schematy blokowe, opisy komponentów, przeprowadzone testy itp.), szczegóły w pkt 4.
+
+ 
+
+3. W ramach dokumentacji musi być zaznaczone kto z Państwa robił jaką część projektu (wkład w projekt członków zespołu)
+
+ 
+
+3.1 Dodatkowo, proszę dołączyć w dokumentacji projektu oświadczenie o samodzielnie wykonanej pracy przed osoby z zespołu
+
+ 
+
+4. Dokumentacja powinna zawierać:
+- opis projektu
+- zakładaną funkcjonalność
+- podział zadań na osoby
+- schemat połączeniowy wysokiego poziomu ("sprzętowy", np.PC-UART-FPGA)
+- schemat blokowy komponentów wraz z połączeniami, zaimplementowanych w FPGA
+- opis poszczególnych kompomentów HDL: funkcjonalnie oraz porty we/wy
+- przeprowadzone symulacje, screen'y, komentarze (tutaj właśnie jest miejsce na nanoszenie grafik odnośnie ramek danych, zaznaczenie charakterystycznych sygnałów itp.)
+- uzyskane finalne rezultaty (np. potwierdzenie realizacji zakładanej funkcjonalności)
+
+ 
+
+5. Proszę przygotować się do obrony projektu, ponieważ jest zdecydowanie wskazane (odnośnie punktacji), aby obydwie osoby prezentowały/ omawiały projekt (np. jedna osoba omawia
+implementacje, druga symulacje itp.)

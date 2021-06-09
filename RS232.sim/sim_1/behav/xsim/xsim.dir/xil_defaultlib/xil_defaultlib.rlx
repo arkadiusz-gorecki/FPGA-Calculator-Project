@@ -1,0 +1,8 @@
+0.7
+2020.2
+Nov 18 2020
+09:20:35
+/home/tomek/prog/mini/puf/RS232/RS232.srcs/sim_1/new/serial_rx_tb.vhd,1619690767,vhdl,,,,serial_rx_tb,,,,,,,,
+/home/tomek/prog/mini/puf/RS232/RS232.srcs/sim_1/new/serial_tx_tb.vhd,1623240354,vhdl,,,,serial_tx_tb,,,,,,,,
+/home/tomek/prog/mini/puf/RS232/RS232.srcs/sources_1/new/serial_rx.vhd,1619694637,vhdl,/home/tomek/prog/mini/puf/RS232/RS232.srcs/sim_1/new/serial_rx_tb.vhd,,,serial_rx,,,,,,,,
+/home/tomek/prog/mini/puf/RS232/RS232.srcs/sources_1/new/serial_tx.vhd,1623238707,vhdl,/home/tomek/prog/mini/puf/RS232/RS232.srcs/sim_1/new/serial_tx_tb.vhd,,,serial_tx,,,,,,,,

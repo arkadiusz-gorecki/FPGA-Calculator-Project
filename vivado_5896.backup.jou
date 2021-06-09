@@ -1,0 +1,27 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Sat Apr 24 23:25:56 2021
+# Process ID: 5896
+# Current directory: C:/Users/Dom/Documents/Vivado_Projects/RS232
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent8016 C:\Users\Dom\Documents\Vivado_Projects\RS232\RS232.xpr
+# Log file: C:/Users/Dom/Documents/Vivado_Projects/RS232/vivado.log
+# Journal file: C:/Users/Dom/Documents/Vivado_Projects/RS232\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project C:/Users/Dom/Documents/Vivado_Projects/RS232/RS232.xpr
+update_compile_order -fileset sources_1
+launch_simulation
+source SERIAL_RX_TB.tcl
+run all
+close_sim
+launch_simulation
+source SERIAL_RX_TB.tcl
+close_sim
+launch_simulation
+source SERIAL_RX_TB.tcl
+run 1000 ns
+run 1000 ns
+run 1000 ns
+run all

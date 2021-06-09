@@ -1,0 +1,14 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Tue Jun  8 00:17:27 2021
+# Process ID: 59685
+# Current directory: /home/tomek/prog/mini/puf/RS232
+# Command line: vivado RS232.xpr
+# Log file: /home/tomek/prog/mini/puf/RS232/vivado.log
+# Journal file: /home/tomek/prog/mini/puf/RS232/vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project RS232.xpr
+update_compile_order -fileset sources_1

@@ -1,0 +1,23 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Tue Jun  8 00:17:27 2021
+# Process ID: 59685
+# Current directory: /home/tomek/prog/mini/puf/RS232
+# Command line: vivado RS232.xpr
+# Log file: /home/tomek/prog/mini/puf/RS232/vivado.log
+# Journal file: /home/tomek/prog/mini/puf/RS232/vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project RS232.xpr
+WARNING: [filemgmt 56-3] Default IP Output Path : Could not find the directory '/home/tomek/prog/mini/puf/RS232/RS232.gen/sources_1'.
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/tomek/apps/xilinx/Vivado/2020.2/data/ip'.
+update_compile_order -fileset sources_1
+INFO: [IP_Flow 19-3899] Cannot get the environment domain name variable for the component vendor name. Setting the vendor name to 'user.org'.
+exit
+INFO: [Common 17-206] Exiting Vivado at Tue Jun  8 01:07:27 2021...
