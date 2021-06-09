@@ -9,7 +9,7 @@ entity SERIAL_TX is
         BAUDRATE     : natural := 9600;
         DATA_L       : natural := 8 ; -- (5-8) data length, how many bits
         PARITY_L     : natural := 1; -- 0 or 1, parity bits length, informs whether we should write the parity bit after data transmission
-        STOP_L       : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
+        STOP_L       : natural := 1; -- 1 or 2, stop bits length, how many ending bits after data transmission
         NEG_TX       : boolean := FALSE; -- if output TxD signal is negated
         NEG_DATA_PAR : boolean := FALSE -- if output DATA and PARITY bits are negated
     );
@@ -26,17 +26,18 @@ end SERIAL_TX;
 
 architecture Behavioural of SERIAL_TX is
     constant T : natural := CLOCK_F / BAUDRATE; -- clock ticks per one bit availability frame
-    type   tx_state is (reset_state, idle, start_bit, send_data, parity_bit, stop_bit);
-    signal current_state, next_state : tx_state;
+    type   tx_state is (idle, reset_state,start_bit, send_data, parity_bit, stop_bit);
+    signal current_state, next_state : tx_state := idle;
     signal data_counter              : std_logic_vector(2 downto 0) := (others => '0');
     signal ticker                    : std_logic_vector(3 downto 0) := (others => '0');
 begin
     process(CLOCK, RESET)
+--        variable stop_bits_count : natural := 0; -- do zliczania ile już bitów stopu odczytaliśmy
     begin
         if (RESET = '1') then
             ticker <= (others => '0');
             current_state <= reset_state;
-            data_counter  <= "000";
+            data_counter <= (others => '0');
         elsif rising_edge(CLOCK) then
             if (ticker >= T or (current_state = idle and next_state = idle)) then
                 ticker        <= (others => '0');
@@ -44,10 +45,10 @@ begin
                 if (current_state = send_data) then
                     data_counter <= data_counter + 1;
                 else
-                    data_counter <= "000";
+                    data_counter <= (others => '0');
                 end if;
             else
-                current_state <= current_state;
+                current_state <= next_state;
                 ticker <= ticker + 1;
             end if;
         end if;
@@ -90,11 +91,11 @@ begin
                     bit_1_count := not bit_1_count;
                 end if;
 
-                if (data_counter = DATA_L) then
+                if (data_counter = DATA_L - 1) then
                     if (PARITY_L = 1) then
                         next_state <= parity_bit;
-                    else
-                        next_state <= stop_bit;
+--                    else -- To jest nieosiągalny kod
+--                        next_state <= stop_bit;
                     end if;
                 else
                     next_state <= send_data;
@@ -111,6 +112,7 @@ begin
                 end if;
 
                 TX <= TX_BUF;
+                next_state <= stop_bit;
             when stop_bit =>
                 SENDING <= '1';
                 TX <= '1';
