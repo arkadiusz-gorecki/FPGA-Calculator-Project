@@ -9,7 +9,7 @@ entity SERIAL_TX_TB is
     constant L_BODOW       :natural := 5_000_000;		-- predkosc nadawania w [bodach]
     constant B_SLOWA       :natural := 8;			-- liczba bitow slowa danych (5-8)
     constant B_PARZYSTOSCI :natural := 1;			-- liczba bitow parzystosci (0-1)
-    constant B_STOPOW      :natural := 2;			-- liczba bitow stopu (1-2)
+    constant B_STOPOW      :natural := 1;			-- liczba bitow stopu (1-2)
     constant N_TX          :boolean := FALSE;			-- negacja logiczna sygnalu szeregowego
     constant N_SLOWO       :boolean := FALSE			-- negacja logiczna slowa danych
   );
@@ -30,11 +30,11 @@ architecture behavioural of SERIAL_TX_TB is
   
 begin
 
- process is							-- proces bezwarunkowy
-  begin								-- czesc wykonawcza procesu
-    R <= '1'; wait for 100 ns;					-- ustawienie sygnalu 'R' na '1' i odczekanie 100 ns
-    R <= '0'; wait;						-- ustawienie sygnalu 'R' na '0' i zatrzymanie
-  end process;							-- zakonczenie procesu
+-- process is							-- proces bezwarunkowy
+--  begin								-- czesc wykonawcza procesu
+--    R <= '1'; wait for 100 ns;					-- ustawienie sygnalu 'R' na '1' i odczekanie 100 ns
+--    R <= '0'; wait;						-- ustawienie sygnalu 'R' na '0' i zatrzymanie
+--  end process;							-- zakonczenie procesu
 
   process is							-- proces bezwarunkowy
   begin								-- czesc wykonawcza procesu
