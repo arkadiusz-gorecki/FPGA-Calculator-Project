@@ -17,10 +17,10 @@ entity SERIAL_TX is
         RESET     : in std_logic;
         CLOCK     : in std_logic;
         DATA      : in std_logic_vector (DATA_L - 1 downto 0);
-        IN_VALID  : in std_logic;
+        SEND      : in std_logic;
 
         TX        : out std_logic;
-        ACCEPT_IN : out std_logic 
+        SENDING   : out std_logic 
     );
 end SERIAL_TX;
 
@@ -53,32 +53,32 @@ begin
         end if;
     end process;
 
-    process (current_state, IN_VALID, data_counter)
+    process (current_state, SEND, data_counter)
         variable bit_1_count : std_logic := '0'; -- parity check
         variable TX_BUF : std_logic;
     begin
         case current_state is
             when reset_state =>
-                ACCEPT_IN <= '0';
+                SENDING <= '0';
                 TX <= '1';
 
                 next_state <= idle;
             when idle =>
-                ACCEPT_IN <= '1';
+                SENDING <= '0';
                 TX <= '1';
 
-                if (IN_VALID = '1') then
+                if (SEND = '1') then
                     next_state <= start_bit;
                 else
                     next_state <= idle;
                 end if;
             when start_bit =>
-                ACCEPT_IN <= '0';
+                SENDING <= '1';
                 TX <= '0';
 
                 next_state <= send_data;
             when send_data =>
-                ACCEPT_IN <= '0';
+                SENDING <= '1';
                 if(NEG_TX = TRUE) then
                     TX <= not DATA(conv_integer(data_counter));
                 else
@@ -112,7 +112,7 @@ begin
 
                 TX <= TX_BUF;
             when stop_bit =>
-                ACCEPT_IN <= '0';
+                SENDING <= '1';
                 TX <= '1';
 
                 if (STOP_L = 1) then
@@ -121,7 +121,7 @@ begin
                     next_state <= stop_bit;
                 end if;
             when others =>
-                ACCEPT_IN <= '0';
+                SENDING <= '0';
                 TX <= '1';
 
                 next_state <= reset_state;
