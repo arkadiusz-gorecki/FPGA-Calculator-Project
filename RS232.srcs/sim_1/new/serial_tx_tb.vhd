@@ -67,8 +67,8 @@ begin
       CLOCK                    => C,				-- zegar taktujacy
       TX                   => TX,				-- wysylany sygnal szeregowy
       DATA                => SLOWO,				-- wysylane slowo danych
-      IN_VALID                => NADAJ,				-- flaga zadania nadania
-      ACCEPT_IN            => WYSYLANIE				-- flaga zajetosci nadajnika
+      SEND                => NADAJ,				-- flaga zadania nadania
+      SENDING           => WYSYLANIE				-- flaga zajetosci nadajnika
    );
 
   process is							-- proces bezwarunkowy
