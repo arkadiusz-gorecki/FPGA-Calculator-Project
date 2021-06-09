@@ -9,7 +9,9 @@ entity CALCULATOR is
         PARITY_L     : natural := 1; -- 0 or 1, parity bits length, informs whether we should write the parity bit after data transmission
         STOP_L       : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
         NEG_X       : boolean := FALSE;
-        NEG_DATA_PAR : boolean := FALSE -- if output DATA and PARITY bits are negated
+        NEG_DATA_PAR : boolean := FALSE; -- if output DATA and PARITY bits are negated
+        
+        DISPLAY_SIZE : natural := 10
     );
     port (
         RESET : in std_logic;
@@ -103,19 +105,29 @@ begin
            tx_data	<= (others => '0');
            tx_send <= '0';
            -- clean calc state
-           compute_reset <= '1'; -- TODO: remeber to turn this off
+           compute_reset <= '1';
         elsif (rising_edge(CLOCK)) then
             
             tx_send <= '0';
+            compute_reset <= '0'; -- TODO: ok here?
         
             if (rx_ready = '1') then
                 -- passing arguments to cpu is automatic by mapping rx ports to cpu ports directly
             end if;
             
             if (compute_ready = '1') then
-                tx_data <= compute_result;
-                tx_send <= '1';
+                -- 
+                state <= send;
             end if;
+            
+            -- state machine for sending output through tx
+            case state is
+                when idle =>
+                    -- do nothig, reset used signals 
+                    
+                when send =>
+                    -- get 
+                    tx_data <=
         end if;
     end process;
        
