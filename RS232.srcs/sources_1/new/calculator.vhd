@@ -1,6 +1,9 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
+library work;
+use work.utils.all;
+
 entity CALCULATOR is
     generic (
         CLOCK_F      : natural := 20_000_000;
@@ -39,8 +42,16 @@ architecture Behavioral of CALCULATOR is
     signal compute_reset : std_logic;
     
     -- cpu out
-    signal compute_result : std_logic_vector (DATA_L - 1 downto 0);
+    signal compute_result : number(DISPLAY_SIZE - 1 downto 0);
     signal compute_ready : std_logic;
+    
+    -- calculator specific
+    constant WAITTIME : natural := DATA_L + PARITY_L + STOP_L;
+    
+    type state is (idle, sending, waiting);
+    signal current_state : state := idle;
+    signal current_digit : natural range DISPLAY_SIZE - 1 downto 0 := 0;
+    signal wait_time : natural := 0;
     
 begin
     serial_rx: entity work.SERIAL_RX(behavioural)
@@ -117,17 +128,34 @@ begin
             
             if (compute_ready = '1') then
                 -- 
-                state <= send;
+                current_state <= sending;
             end if;
             
-            -- state machine for sending output through tx
-            case state is
+            -- state machine for sending output through TX
+            case current_state is
                 when idle =>
-                    -- do nothig, reset used signals 
-                    
-                when send =>
-                    -- get 
-                    tx_data <=
+                    -- do nothig
+                when sending =>
+                    -- get current digit and send it via TX
+                    if (current_digit < DISPLAY_SIZE) then
+                        tx_data <= compute_result(DISPLAY_SIZE - 1 - current_digit);
+                        tx_send <= '1';
+                        current_digit <= current_digit + 1;
+                        current_state <= waiting;
+                    else
+                        tx_send <= '0';
+                        current_digit <= 0;
+                        current_state <= idle;
+                    end if;
+                when waiting =>
+                    -- wait for TX to process current byte
+                    if (wait_time = WAITTIME) then
+                        wait_time <= 0;
+                        current_state <= sending;
+                    else
+                        wait_time <= wait_time + 1;
+                    end if;
+            end case;
         end if;
     end process;
        
