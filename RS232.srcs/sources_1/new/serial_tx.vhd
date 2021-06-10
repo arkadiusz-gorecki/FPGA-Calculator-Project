@@ -9,7 +9,7 @@ entity SERIAL_TX is
         BAUDRATE     : natural := 9600;
         DATA_L       : natural := 8 ; -- (5-8) data length, how many bits
         PARITY_L     : natural := 1; -- 0 or 1, parity bits length, informs whether we should write the parity bit after data transmission
-        STOP_L       : natural := 1; -- 1 or 2, stop bits length, how many ending bits after data transmission
+        STOP_L       : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
         NEG_TX       : boolean := FALSE; -- if output TxD signal is negated
         NEG_DATA_PAR : boolean := FALSE -- if output DATA and PARITY bits are negated
     );
@@ -25,113 +25,93 @@ entity SERIAL_TX is
 end SERIAL_TX;
 
 architecture Behavioural of SERIAL_TX is
-    constant T : natural := CLOCK_F / BAUDRATE; -- clock ticks per one bit availability frame
-    type   tx_state is (idle, reset_state,start_bit, send_data, parity_bit, stop_bit);
-    signal current_state, next_state : tx_state := idle;
-    signal data_counter              : std_logic_vector(2 downto 0) := (others => '0');
-    signal ticker                    : natural;
+    constant T : natural := CLOCK_F / BAUDRATE; -- liczba taktów zegara w  czasie których jeden bit danej jest dostêpny
+    type   tx_state is (idle, send_data, parity_bit, stop_bit, ending);
 
 begin
     process(CLOCK, RESET)
-        variable bit_1_count : std_logic := '0'; -- parity check
+        variable bit_1_even_count : std_logic := '0'; -- parity check
         variable TX_BUF : std_logic;
-        variable stop_l : natural := 0;
+        variable state : tx_state; -- obecny stan
+        variable ticker : natural; -- licznik taktów zegara
+        variable data_counter : natural := 0; -- ile bitów danej ju¿ wys³ano
+        variable stop_count : natural := 0; -- ile bitów stopu ju¿ przeczytano
     begin
         if (RESET = '1') then
-            ticker <= 0;
-            current_state <= reset_state;
-            data_counter <= (others => '0');
+            bit_1_even_count := '0';
+            TX_BUF := '0';
+            state := idle;
+            ticker := 0;
+            data_counter := 0;
+            stop_count := 0;
         elsif rising_edge(CLOCK) then
-            case current_state is
-                when reset_state =>
-                    SENDING <= '0';
-                    TX_BUF := '0';
-    
-                    next_state <= idle;
+            case state is
                 when idle =>
-                    SENDING <= '0';
                     TX_BUF := '0';
-    
                     if (SEND = '1') then
-                        next_state <= start_bit;
-                    else
-                        next_state <= idle;
+                        SENDING <= '1'; -- zaczynamy transmisjê
+                        TX_BUF := '1'; -- wyœlij bit startu
+                        state := send_data; -- zmieñ stan
                     end if;
-                when start_bit =>
-                    if (ticker = T) then
-                        next_state <= send_data;
-                        ticker <= 0;
-                    else
-                        ticker <= ticker + 1;
-                        SENDING <= '1';
-                        TX_BUF := '1';
-                    end if;
-                    
                 when send_data =>
-                    if (ticker = T) then
-                        ticker <= 0;
-                        if DATA(conv_integer(data_counter)) = '1' then
-                            bit_1_count := not bit_1_count;
+                    ticker := ticker + 1;
+                    if ticker >= T then -- odczekaj a¿ bêdziesz móg³ wys³aæ kolejny bit
+                        ticker := 0;
+                        
+                        if DATA(data_counter) = '1' then
+                            bit_1_even_count := not bit_1_even_count;
                         end if;
-        
-                        if (data_counter = DATA_L - 1) then
-                            if (PARITY_L = 1) then
-                                next_state <= parity_bit;
+                        
+                        if(NEG_TX) then
+                            TX_BUF :=  not DATA(data_counter);
+                        else
+                            TX_BUF := DATA(data_counter);
+                        end if;
+                        
+                        data_counter := data_counter + 1;
+                        if (data_counter >= DATA_L) then -- jeœli wys³aliœmy ju¿ ca³¹ dan¹ (8 bitów)
+                            data_counter := 0;
+                            if (PARITY_L = 1) then -- czy wysy³amy bit parzystoœci
+                                state := parity_bit;
                             else
-                                next_state <= stop_bit;
+                                state := stop_bit;
                             end if;
-                        else
-                            next_state <= send_data;
-                        end if;
-                    else 
-                        ticker <= ticker + 1;
-                        SENDING <= '1';
-                        if(NEG_TX = TRUE) then
-                            TX_BUF :=  not DATA(conv_integer(data_counter));
-                        else
-                            TX_BUF := DATA(conv_integer(data_counter));
                         end if;
                     end if;
-                    
                 when parity_bit =>
-                    if (ticker = T) then
-                        ticker <= 0;
-                        next_state <= stop_bit;
-                    else
-                        ticker <= ticker + 1;
-                        if (bit_1_count = '1') then
-                            TX_BUF := '1';
+                    ticker := ticker + 1;
+                    if ticker >= T then
+                        ticker := 0;
+                        
+                        if(NEG_DATA_PAR) then
+                            TX_BUF :=  not bit_1_even_count;
                         else
-                            TX_BUF := '0';
+                            TX_BUF := bit_1_even_count;
                         end if;
-        
-                        if (NEG_DATA_PAR = TRUE) then
-                            TX_BUF := not TX_BUF;
-                        end if;
-        
-                        TX <= TX_BUF;
+                        
+                        state := stop_bit;
                     end if;
                 when stop_bit =>
-                    if (ticker = T) then
-                        ticker <= 0;
-                        stop_l := stop_l + 1;
-        
-                        if (stop_l = STOP_L) then
-                            next_state <= idle;
-                            stop_l := 0;
-                        else
-                            next_state <= stop_bit;
+                    ticker := ticker + 1;
+                    if ticker >= T then
+                        ticker := 0;
+                        
+                        stop_count := stop_count + 1;
+                        if (stop_count >= STOP_L) then
+                            state := ending;
+                            stop_count := 0;
                         end if;
-                    else
-                        ticker <= ticker + 1;
-                        SENDING <= '1';
-                        TX <= '1';
+                        TX_BUF := '0';
                     end if;
-                when others =>
-                    SENDING <= '0';
-                    TX <= '0';
-    
-                    next_state <= reset_state;
+                when ending => -- daj ostatniemu bitu stopu siê wyœwietliæ przez cztery takty
+                    ticker := ticker + 1;
+                    if ticker >= T then
+                        ticker := 0;
+                        
+                        state := idle;
+                        SENDING <= '0'; -- koniec transmisji
+                        bit_1_even_count := '0';
+                    end if;
             end case;
             
             TX <= TX_BUF;
