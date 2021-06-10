@@ -24,7 +24,7 @@ architecture behavioural of SERIAL_TX_TB is
   signal   C		:std_logic := '1';			-- symulowany zegar taktujacy inicjowany na '1'
   signal   SLOWO	:std_logic_vector(B_SLOWA-1 downto 0) := (others=>'0'); -- symulowany wejscie 'SLOWO'
   signal   NADAJ	:std_logic := '0';			-- symulowany wejscie 'NADAJ'
-  signal   WYSYLANIE	:std_logic;				-- symulowany wejscie 'WYSYLANIE'
+  signal   WYSYLANIE	:std_logic := '1';				-- symulowany wejscie 'WYSYLANIE'
   signal   TX		:std_logic;				-- obserwowane wyjscie 'TX'
   signal   ODEBRANO	:std_logic_vector(SLOWO'range);		-- dana oderana przez emulator odbiornika
   

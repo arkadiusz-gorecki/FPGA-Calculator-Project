@@ -82,8 +82,8 @@ begin
       NEG_DATA_PAR         => N_SLOWO				-- negacja logiczna slowa danych
     )
     port map(							-- mapowanie sygnalow do portow
-      R                    => R,				-- sygnal resetowania
-      C                    => C,				-- zegar taktujacy
+      RESET                    => R,				-- sygnal resetowania
+      CLOCK                    => C,				-- zegar taktujacy
       RX                   => RX,				-- odebrany sygnal szeregowy
       DATA                 => SLOWO,				-- odebrane slowo danych
       READY                => GOTOWE,				-- flaga potwierdzenia odbioru

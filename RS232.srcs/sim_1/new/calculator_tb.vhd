@@ -77,7 +77,7 @@ begin
     wait;							-- zatrzymanie procesu do konca symulacji
   end process;							-- zakonczenie procesu
   
-  serial_sum_inst: entity work.CALCULATOR(behavioural)
+  serial_sum_inst: entity work.CALCULATOR
     generic map (
       CLOCK_F              => F_ZEGARA,				-- czestotliwosc zegata w [Hz]
       BAUDRATE             => L_BODOW,				-- predkosc odbierania w [bodach]
@@ -85,8 +85,8 @@ begin
       PARITY_L             => B_PARZYSTOSCI,			-- liczba bitow parzystosci (0-1)
       STOP_L               => B_STOPOW,				-- liczba bitow stopu (1-2)
       NEG_X                => N_SERIAL,				-- negacja logiczna sygnalu szeregowego
-      NEG_DATA_PAR         => N_SLOWO				-- negacja logiczna slowa danych
-      --L_CYFR               => L_CYFR,				-- liczba cyfr dziesietnych
+      NEG_DATA_PAR         => N_SLOWO,				-- negacja logiczna slowa danych
+      DISPLAY_SIZE         => L_CYFR				-- liczba cyfr dziesietnych
       --L_BODOW_PRZERWY      => L_BODOW_PRZERWY			-- czas przerwy w nadawaniu w [bodach]
 
     )                      
