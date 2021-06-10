@@ -35,22 +35,33 @@ begin
         variable state : tx_state; -- obecny stan
         variable ticker : natural; -- licznik taktów zegara
         variable data_counter : natural := 0; -- ile bitów danej ju¿ wys³ano
-        variable stop_count : natural := 0; -- ile bitów stopu ju¿ przeczytano
+        variable stop_count : natural := 0; -- ile bitów stopu ju¿ przeczytano						-- proces bezwarunkowy
+        function neg(TX :std_logic) return std_logic is	-- deklaracja funkcji wewnetrznej 'neg'
+        begin							-- czesc wykonawcza funkcji wewnetrznej
+          if (NEG_TX xor NEG_DATA_PAR) = TRUE then 
+            return not TX; 
+          end if;
+          return TX;
+        end function;	
     begin
         if (RESET = '1') then
             bit_1_even_count := '0';
-            TX_BUF := '0';
+            TX_BUF := '0'; 
+            if (NEG_TX) then TX_BUF := '1'; end if;            
             state := idle;
             ticker := 0;
             data_counter := 0;
             stop_count := 0;
+            SENDING <= '0';
         elsif rising_edge(CLOCK) then
             case state is
                 when idle =>
-                    TX_BUF := '0';
+                    TX_BUF := '0'; 
+                    if (NEG_TX) then TX_BUF := '1'; end if;
                     if (SEND = '1') then
                         SENDING <= '1'; -- zaczynamy transmisjê
-                        TX_BUF := '1'; -- wyœlij bit startu
+                        TX_BUF := '1';  -- wyœlij bit startu
+                        if (NEG_TX) then TX_BUF := '0'; end if;   
                         state := send_data; -- zmieñ stan
                     end if;
                 when send_data =>
@@ -62,11 +73,12 @@ begin
                             bit_1_even_count := not bit_1_even_count;
                         end if;
                         
-                        if(NEG_TX) then
-                            TX_BUF :=  not DATA(data_counter);
-                        else
-                            TX_BUF := DATA(data_counter);
-                        end if;
+                        TX_BUF := neg(DATA(data_counter));
+--                        if(NEG_TX) then
+--                            TX_BUF :=  not DATA(data_counter);
+--                        else
+--                            TX_BUF := DATA(data_counter);
+--                        end if;
                         
                         data_counter := data_counter + 1;
                         if (data_counter >= DATA_L) then -- jeœli wys³aliœmy ju¿ ca³¹ dan¹ (8 bitów)
@@ -83,11 +95,12 @@ begin
                     if ticker >= T then
                         ticker := 0;
                         
-                        if(NEG_DATA_PAR) then
-                            TX_BUF :=  not bit_1_even_count;
-                        else
-                            TX_BUF := bit_1_even_count;
-                        end if;
+                        TX_BUF := neg(bit_1_even_count);
+--                        if(NEG_DATA_PAR) then
+--                            TX_BUF :=  not bit_1_even_count;
+--                        else
+--                            TX_BUF := bit_1_even_count;
+--                        end if;
                         
                         state := stop_bit;
                     end if;
@@ -102,6 +115,7 @@ begin
                             stop_count := 0;
                         end if;
                         TX_BUF := '0';
+                        if (NEG_TX) then TX_BUF := '1'; end if;  
                     end if;
                 when ending => -- daj ostatniemu bitu stopu siê wyœwietliæ przez cztery takty
                     ticker := ticker + 1;
