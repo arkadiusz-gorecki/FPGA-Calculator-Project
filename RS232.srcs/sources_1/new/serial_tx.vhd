@@ -95,7 +95,7 @@ begin
                 if (data_counter = DATA_L - 1) then
                     if (PARITY_L = 1) then
                         next_state <= parity_bit;
-                    else -- To jest nieosiągalny kod
+                    else
                         next_state <= stop_bit;
                     end if;
                 else

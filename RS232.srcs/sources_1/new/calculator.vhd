@@ -26,6 +26,66 @@ entity CALCULATOR is
 end CALCULATOR;
 
 architecture Behavioral of CALCULATOR is
+    component SERIAL_RX is
+    generic (
+        CLOCK_F : natural := 20_000_000;
+        BAUDRATE : natural := 9600;
+        DATA_L : natural := 8 ; -- (5-8) data length, how many bits
+        PARITY_L : natural := 1; -- 0 or 1, parity bits length, informs whether we should read the parity bit after data transmission
+        STOP_L : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
+        NEG_RX : boolean := FALSE; -- if input RxD signal is negated
+        NEG_DATA_PAR : boolean := FALSE -- if input DATA and PARITY bits are negated
+    );
+    port (
+        RESET : in std_logic;
+        CLOCK : in std_logic;
+        RX : in std_logic;
+        
+        DATA : out std_logic_vector (DATA_L - 1 downto 0);
+        READY : out std_logic;
+        ERR :out std_logic
+    );
+    end component;
+
+    component SERIAL_TX is
+    generic (
+        CLOCK_F      : natural := 20_000_000;
+        BAUDRATE     : natural := 9600;
+        DATA_L       : natural := 8 ; -- (5-8) data length, how many bits
+        PARITY_L     : natural := 1; -- 0 or 1, parity bits length, informs whether we should write the parity bit after data transmission
+        STOP_L       : natural := 1; -- 1 or 2, stop bits length, how many ending bits after data transmission
+        NEG_TX       : boolean := FALSE; -- if output TxD signal is negated
+        NEG_DATA_PAR : boolean := FALSE -- if output DATA and PARITY bits are negated
+    );
+    port (
+        RESET     : in std_logic;
+        CLOCK     : in std_logic;
+        DATA      : in std_logic_vector (DATA_L - 1 downto 0);
+        SEND      : in std_logic;
+
+        TX        : out std_logic;
+        SENDING   : out std_logic 
+    );
+    end component;
+    
+    component COMPUTE_UNIT is
+    generic (
+        DATA_L : natural := 8; -- (5-8) data length, how many bits
+        DISPLAY_SIZE : natural := 10 -- display size, max digit count of calculations
+    );
+    port (
+        -- input
+        RESET : in std_logic;
+        DATA : in std_logic_vector (DATA_L - 1 downto 0);
+        READY : in std_logic;
+        
+        -- output
+        RESULT : out number(DISPLAY_SIZE - 1 downto 0); -- array of ascii codes
+        SEND : out std_logic
+    );
+    end component;
+   
+   
     -- rx out
     signal rx_data : std_logic_vector(DATA_L-1 downto 0);
     signal rx_ready : std_logic;
@@ -54,7 +114,7 @@ architecture Behavioral of CALCULATOR is
     signal wait_time : natural := 0;
     
 begin
-    serial_rx: entity work.SERIAL_RX(behavioural)
+    some_rx : entity work.SERIAL_RX
       generic map (
         CLOCK_F => CLOCK_F,
         BAUDRATE => BAUDRATE,
@@ -75,7 +135,7 @@ begin
         READY => rx_ready,
         ERR => rx_error
       );
-    serial_tx: entity work.SERIAL_TX(behavioural)
+    some_tx : entity work.SERIAL_TX
       generic map (
         CLOCK_F => CLOCK_F,
         BAUDRATE => BAUDRATE,
@@ -96,15 +156,18 @@ begin
         TX => TX,
         SENDING => tx_sending
       );
-    compute_unit: entity work.COMPUTE_UNIT(behavioural)
+    some_compute_unit: entity work.COMPUTE_UNIT
       generic map (
-        DATA_L => DATA_L
+        DATA_L => DATA_L,
+        DISPLAY_SIZE => DISPLAY_SIZE
       )
       port map (
+        -- in
         RESET => compute_reset,
         DATA => rx_data,
         READY => rx_ready,
         
+        -- out
         RESULT => compute_result,
         SEND => compute_ready
       );
