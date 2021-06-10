@@ -166,7 +166,7 @@ begin
                         
                         -- perform operation
                         if (current_sign = 43) then -- plus sign
-                            for I in 0 to DISPLAY_SIZE loop
+                            for I in 0 to DISPLAY_SIZE - 1 loop
                                 digit_sum := current_sum(I) - zero_digit_vector + current_number(I) - zero_digit_vector + carry;
                                 if (digit_sum > 10) then
                                     digit_sum := digit_sum - 10;
