@@ -35,9 +35,9 @@ begin
         variable state : tx_state; -- obecny stan
         variable ticker : natural; -- licznik taktów zegara
         variable data_counter : natural := 0; -- ile bitów danej ju¿ wys³ano
-        variable stop_count : natural := 0; -- ile bitów stopu ju¿ przeczytano						-- proces bezwarunkowy
-        function neg(TX :std_logic) return std_logic is	-- deklaracja funkcji wewnetrznej 'neg'
-        begin							-- czesc wykonawcza funkcji wewnetrznej
+        variable stop_count : natural := 0; -- ile bitów stopu ju¿ przeczytano
+        function neg(TX :std_logic) return std_logic is	-- oblicza wartoœc bitu po na³o¿eniu wszystkich negacji
+        begin
           if (NEG_TX xor NEG_DATA_PAR) = TRUE then 
             return not TX; 
           end if;
@@ -74,11 +74,6 @@ begin
                         end if;
                         
                         TX_BUF := neg(DATA(data_counter));
---                        if(NEG_TX) then
---                            TX_BUF :=  not DATA(data_counter);
---                        else
---                            TX_BUF := DATA(data_counter);
---                        end if;
                         
                         data_counter := data_counter + 1;
                         if (data_counter >= DATA_L) then -- jeœli wys³aliœmy ju¿ ca³¹ dan¹ (8 bitów)
@@ -96,11 +91,6 @@ begin
                         ticker := 0;
                         
                         TX_BUF := neg(bit_1_even_count);
---                        if(NEG_DATA_PAR) then
---                            TX_BUF :=  not bit_1_even_count;
---                        else
---                            TX_BUF := bit_1_even_count;
---                        end if;
                         
                         state := stop_bit;
                     end if;

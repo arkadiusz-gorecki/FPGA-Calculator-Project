@@ -2,7 +2,6 @@ library ieee;
 use     ieee.std_logic_1164.all;
 use     ieee.std_logic_unsigned.all;
 use     ieee.std_logic_misc.all;
-
 entity SERIAL_TX_TB is
   generic (
     constant F_ZEGARA      :natural := 20_000_000;		-- czestotliwosc zegara systemowego w [Hz]
@@ -14,30 +13,23 @@ entity SERIAL_TX_TB is
     constant N_SLOWO       :boolean := FALSE			-- negacja logiczna slowa danych
   );
 end SERIAL_TX_TB;
-
 architecture behavioural of SERIAL_TX_TB is
-
   constant O_ZEGARA	:time := 1 sec/F_ZEGARA;		-- okres zegara systemowego
   constant O_BITU	:time := 1 sec/L_BODOW;			-- okres czasu trwania jednego bodu
-
   signal   R		:std_logic := '0';			-- symulowany sygnal resetujacacy
   signal   C		:std_logic := '1';			-- symulowany zegar taktujacy inicjowany na '1'
   signal   SLOWO	:std_logic_vector(B_SLOWA-1 downto 0) := (others=>'0'); -- symulowany wejscie 'SLOWO'
   signal   NADAJ	:std_logic := '0';			-- symulowany wejscie 'NADAJ'
-  signal   WYSYLANIE	:std_logic := '1';				-- symulowany wejscie 'WYSYLANIE'
+  signal   WYSYLANIE	:std_logic;				-- symulowany wejscie 'WYSYLANIE'
   signal   TX		:std_logic;				-- obserwowane wyjscie 'TX'
   signal   ODEBRANO	:std_logic_vector(SLOWO'range);		-- dana oderana przez emulator odbiornika
-  signal   BLLLAD		:std_logic;
   
 begin
-
  process is							-- proces bezwarunkowy
-  begin								-- czesc wykonawcza procesu
-    R <= '0'; wait for 1000 ns;					-- ustawienie sygnalu 'R' na '1' i odczekanie 100 ns
-    R <= '1'; wait for 5000 ns;
-    R <= '0'; wait;				-- ustawienie sygnalu 'R' na '0' i zatrzymanie
+  begin						-- czesc wykonawcza procesu	
+    R <= '1'; wait for 100 ns;					-- ustawienie sygnalu 'R' na '1' i odczekanie 100 ns	
+    R <= '0'; wait;						-- ustawienie sygnalu 'R' na '0' i zatrzymanie
   end process;							-- zakonczenie procesu
-
   process is							-- proces bezwarunkowy
   begin								-- czesc wykonawcza procesu
     C <= not(C); wait for O_ZEGARA/2;				-- zanegowanie sygnalu 'clk' i odczekanie pol okresu zegara
@@ -76,14 +68,12 @@ begin
       SEND                => NADAJ,				-- flaga zadania nadania
       SENDING           => WYSYLANIE				-- flaga zajetosci nadajnika
    );
-
   process is							-- proces bezwarunkowy
     function neg(V :std_logic; N :boolean) return std_logic is	-- deklaracja funkcji wewnetrznej 'neg'
     begin							-- czesc wykonawcza funkcji wewnetrznej
       if (N=FALSE) then return (V); end if;			-- zwrot wartosc 'V' gdy 'N'=FALSE
       return (not(V));						-- zwrot zanegowanej wartosci 'V'
     end function;						-- zakonczenie funkcji wewnetrznej
-
     variable D    :std_logic_vector(B_SLOWA-1 downto 0);	-- deklaracja zmiennej bufora bitow
     variable blad : boolean;					-- deklaracja zmiennej flagi bledu odbioru
   begin								-- czesc wykonawcza procesu
@@ -93,8 +83,7 @@ begin
       wait until neg(TX,N_TX)='1';				-- oczekiwanie na poczatek bitu START
       wait for O_BITU/2;					-- odczekanie polowy trwania jednego bodu 
       if (neg(TX,N_TX) /= '1') then				-- zbadanie niepoprawnosci stanu bit START
-        blad := TRUE;
-      BLLLAD <= '1';						-- dla nieporawnego stanu ustawienie flagi BLAD
+        blad := TRUE;						-- dla nieporawnego stanu ustawienie flagi BLAD
       end if;							-- zakonczenie instukcji warunkowej
       wait for O_BITU;						-- odczekanie okresu jednego bodu
       for i in 0 to B_SLOWA-1 loop				-- petla po kolejnych bitach odbieranej danej
@@ -104,15 +93,13 @@ begin
       end loop;							-- zakonczenie petli
       if (B_PARZYSTOSCI = 1) then				-- badanie aktywowania bitu parzystosci
         if ((neg(TX,N_TX) = XOR_REDUCE(D)) = N_SLOWO) then	-- zbadanie niezgodnosci stanu bitu parzystaosci
-          blad := TRUE;
-      BLLLAD <= '1';						-- dla nieporawnego stanu ustawienie flagi BLAD
+          blad := TRUE;						-- dla nieporawnego stanu ustawienie flagi BLAD
         end if;							-- zakonczenie instukcji warunkowej
         wait for O_BITU;					-- odczekanie okresu jednego bodu
       end if;							-- zakonczenie instukcji warunkowej
       for i in 0 to B_STOPOW-1 loop				-- petla po liczbie bitow STOP
         if (neg(TX,N_TX) /= '0') then				-- zbadanie niepoprawnosci stanu bit STOP
-          blad := TRUE;
-      BLLLAD <= '1';						-- dla nieporawnego stanu ustawienie flagi BLAD
+          blad := TRUE;						-- dla nieporawnego stanu ustawienie flagi BLAD
         end if;							-- zakonczenie instukcji warunkowej
       end loop;							-- zakonczenie petli
       if (N_SLOWO=TRUE) then					-- zbadanie ustawienia flagi negacji danej
@@ -120,14 +107,8 @@ begin
       end if;							-- zakonczenie instukcji warunkowej
       ODEBRANO <= D;						-- przypisanie do wektora 'ODEBRANO' odebranej danej
       if (blad=TRUE) then					-- zbadanie ustawienia flagi bledu
-        ODEBRANO <= D;				-- ustawienie wektora 'ODEBRANO' na stan bledu
+        ODEBRANO <= (others => 'X');				-- ustawienie wektora 'ODEBRANO' na stan bledu
       end if;							-- zakonczenie instukcji warunkowej
     end loop;							-- zakonczenie petli
   end process;							-- zakonczenie procesu
-
 end behavioural;
-
-
-
-
-
