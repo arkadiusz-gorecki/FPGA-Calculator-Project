@@ -1,6 +1,9 @@
-# Ignore everything
-*
+vivado_*
 
-# except
-!RS232.srcs/*
-!RS232.xpr
+RS232.cache
+RS232.hw
+RS232.ip_user_files
+RS232.sim
+RS232.srcs
+
+*.png
