@@ -30,7 +30,7 @@ architecture behavioural of CALCULATOR_TB is
   constant O_ZEGARA	:time := 1 sec/F_ZEGARA;		-- okres zegara systemowego
   constant O_BITU	:time := 1 sec/L_BODOW;			-- okres czasu trwania jednego bodu
 
-  constant ROZKAZ	:string := "-123-200+2=";			-- = -321 sekwencja wysylanych znakow ASCII
+  constant ROZKAZ	:string := "-123-100+50=";			-- = -321 sekwencja wysylanych znakow ASCII
   signal   WYNIK	:string(ROZKAZ'length downto 1); -- sekwencja odebranych znakow ASCII
 
   function neg(V :std_logic; N :boolean) return std_logic is	-- deklaracja funkcji wewnetrznej 'neg'

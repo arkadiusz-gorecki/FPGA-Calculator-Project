@@ -11,7 +11,7 @@ entity COMPUTE_UNIT is
   generic (
     constant CLOCK_F : natural := 20_000_000;
     constant BAUDRATE : natural := 5_000_000;
-    constant DATA_L : natural := 8; -- liczba bitów jednej danej
+    constant DATA_L : natural := 8; -- liczba bitï¿½w jednej danej
     constant PARITY_L : natural := 1; -- liczba bitow parzystosci (0-1)
     constant STOP_L : natural := 2 -- liczba bitow stopu (1-2)
   );
@@ -19,34 +19,36 @@ entity COMPUTE_UNIT is
     CLOCK : in std_logic;
     RESET : in std_logic;
     DATA : in std_logic_vector (DATA_L - 1 downto 0); -- dana wejsciowa (cyfra, operacja)
-    READY : in std_logic; -- informacja od RX ¿eby odebraæ jedn¹ dan¹
+    READY : in std_logic; -- informacja od RX ï¿½eby odebraï¿½ jednï¿½ danï¿½
 
-    RESULT : out std_logic_vector (DATA_L - 1 downto 0); -- dana wyjœciowa, wynik obliczenia
-    SEND : out std_logic -- informacja dla TX ¿eby odebra³ wynik
+    RESULT : out std_logic_vector (DATA_L - 1 downto 0); -- dana wyjï¿½ciowa, wynik obliczenia
+    SEND : out std_logic -- informacja dla TX ï¿½eby odebraï¿½ wynik
   );
 end COMPUTE_UNIT;
 
 architecture Behavioral of COMPUTE_UNIT is
   type cpu_state is (start, first_num, operand, other_num, send_result);
-  constant T : natural := CLOCK_F / BAUDRATE; -- liczba taktów zegara w czasie których jeden bit danej jest dostêpny
-  constant ticks : natural := (1 + DATA_L + PARITY_L + STOP_L + 1) * T; -- jak d³ugo dana powinna byæ wystawiona do TX (+1 bit startu, +1 przerwa)
+  constant T : natural := CLOCK_F / BAUDRATE; -- liczba taktï¿½w zegara w czasie ktï¿½rych jeden bit danej jest dostï¿½pny
+  constant ticks : natural := (1 + DATA_L + PARITY_L + STOP_L + 1) * T; -- jak dï¿½ugo dana powinna byï¿½ wystawiona do TX (+1 bit startu, +1 przerwa)
 begin
   process (CLOCK, RESET) is
-    variable input : std_logic_vector (DATA_L - 1 downto 0); -- bufor na dan¹ wejœciow¹ (cyfra, operacja)
+    variable input : std_logic_vector (DATA_L - 1 downto 0); -- bufor na danï¿½ wejï¿½ciowï¿½ (cyfra, operacja)
 
     variable current_sum : integer;
-    variable is_sum_zero : boolean := false; -- czy suma jest równa 0
+    variable is_sum_zero : boolean := false; -- czy suma jest rï¿½wna 0
     variable current_number : integer;
     variable is_current_number_negative : boolean := FALSE;
     variable current_operation : std_logic_vector (DATA_L - 1 downto 0);
     variable state : cpu_state := start;
     variable cyfra : integer;
-    variable ticks_count : natural; -- liczba wys³anych ju¿ bitów jednej cyfry wyniku do TX
-    variable result_count : natural; -- liczba wys³anych ju¿ cyfr wyniku do TX
+    variable ticks_count : natural; -- liczba wysï¿½anych juï¿½ bitï¿½w jednej cyfry wyniku do TX
+    variable result_count : natural; -- liczba wysï¿½anych juï¿½ cyfr wyniku do TX
     variable is_first_bit : boolean := true; 
+    variable digits_count : integer;
+    variable sum_copy : integer;
     constant ERR_VECTOR : std_logic_vector (DATA_L - 1 downto 0) := (others => 'X');
     constant ZEROS_VECTOR : std_logic_vector (DATA_L - 1 downto 0) := (others => '0');
-    procedure err_and_reset is -- daj b³¹d na sygna³ i zresetuj komponent
+    procedure err_and_reset is -- daj bï¿½ï¿½d na sygnaï¿½ i zresetuj komponent
     begin
       RESULT <= ERR_VECTOR;
       SEND <= '1';
@@ -57,7 +59,7 @@ begin
         ticks_count := 0;
         is_sum_zero := false;
     end procedure;
-    function add_digit(number : natural; digit : std_logic_vector) return natural is -- przesuniêcie znakow liczby w prawo i dodanie cyfry
+    function add_digit(number : natural; digit : std_logic_vector) return natural is -- przesuniï¿½cie znakow liczby w prawo i dodanie cyfry
     begin
       return number * 10 + (CONV_INTEGER(digit) - character'pos('0'));
     end function;
@@ -86,14 +88,14 @@ begin
             if (input = 45) then -- znak minus
               is_current_number_negative := true;
               state := first_num;
-            elsif (47 < input and input < 58) then -- jeœli cyfra
+            elsif (47 < input and input < 58) then -- jeï¿½li cyfra
               current_number := add_digit(current_number, input);
               state := first_num;
             else
               err_and_reset;
             end if;
           when first_num =>
-            if (input > 47 and input < 58) then -- jeœli cyfra
+            if (input > 47 and input < 58) then -- jeï¿½li cyfra
               current_number := add_digit(current_number, input);
             elsif (input = 43 or input = 45 or input = 61) then -- znaki + - =
               if (is_current_number_negative = true) then
@@ -102,7 +104,7 @@ begin
 
               current_sum := current_sum + current_number;
               current_number := 0;
-              current_operation := input; -- zapamiêtaj operacjê na przysz³oœæ
+              current_operation := input; -- zapamiï¿½taj operacjï¿½ na przyszï¿½oï¿½ï¿½
               state := operand;
               if (input = 61) then
                 if(current_sum = 0) then
@@ -112,14 +114,14 @@ begin
               end if;
             end if;
           when operand =>
-            if (input > 47 and input < 58) then -- jeœli cyfra
+            if (input > 47 and input < 58) then -- jeï¿½li cyfra
               current_number := add_digit(current_number, input);
               state := other_num;
             else
               err_and_reset;
             end if;
           when other_num =>
-            if (input > 47 and input < 58) then -- jeœli cyfra
+            if (input > 47 and input < 58) then -- jeï¿½li cyfra
               current_number := add_digit(current_number, input);
             elsif (input = 43 or input = 45 or input = 61) then -- znaki + - =
               if current_operation = 43 then -- dodawanie do sumy
@@ -128,7 +130,7 @@ begin
                 current_sum := current_sum - current_number;
               end if;
               current_number := 0;
-              current_operation := input; -- zapamiêtaj operacjê na przysz³oœæ
+              current_operation := input; -- zapamiï¿½taj operacjï¿½ na przyszï¿½oï¿½ï¿½
               state := operand;
               if (input = 61) then -- znak =
                 if(current_sum = 0) then
@@ -144,23 +146,33 @@ begin
       else
         if (state = send_result) then
                   
-          if (current_sum /= 0) then -- dopóki nie zredukowa³o siê do zera
+          if (digits_count /= 0) then -- dopï¿½ki nie zredukowaï¿½o siï¿½ do zera
             ticks_count := ticks_count + 1;
             
             if(is_first_bit) then -- pierwsza cyfra (lub znak minus) wyniku
                 is_first_bit := false;
-                if current_sum < 0 then -- liczba ujemna wiêc wypisz minus
+                if current_sum < 0 then -- liczba ujemna wiï¿½c wypisz minus
                     RESULT <= ZEROS_VECTOR + character'pos('-');
                     current_sum := abs(current_sum);
-                else -- pierwsza cyfra
-                    cyfra := current_sum mod 10; -- zapisz cyfrê jednoœci
-                    current_sum := current_sum / 10; -- przesuñ cyfry w prawo
-                    RESULT <= ZEROS_VECTOR + character'pos('0') + cyfra;
+                    SEND <= '1';
+--                else -- pierwsza cyfra
+--                    cyfra := current_sum mod 10; -- zapisz cyfrï¿½ jednoï¿½ci
+--                    current_sum := current_sum / 10; -- przesuï¿½ cyfry w prawo
+--                    RESULT <= ZEROS_VECTOR + character'pos('0') + cyfra;
                 end if;
-                SEND <= '1';
+                
+                digits_count := 1;
+                sum_copy := current_sum / 10;
+                while (sum_copy > 0) loop
+                    digits_count := digits_count * 10;
+                    sum_copy := sum_copy / 10;
+                end loop;
+                
+--                SEND <= '1';
             elsif ticks_count >= ticks then -- odliczaj takty zegara
-              cyfra := current_sum mod 10; -- nastêpna cyfra wyniku
-              current_sum := current_sum / 10;
+              cyfra := current_sum / digits_count; -- nastï¿½pna cyfra wyniku
+              current_sum := current_sum - (cyfra * digits_count);
+              digits_count := digits_count / 10;
               RESULT <= ZEROS_VECTOR + character'pos('0') + cyfra;
               SEND <= '1';
               ticks_count := 0;
