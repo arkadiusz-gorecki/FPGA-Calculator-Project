@@ -6,10 +6,10 @@ use     ieee.std_logic_misc.all;
 
 entity CALCULATOR_TB is
   generic (
-    F_ZEGARA		:natural := 20000000;			-- czestotliwosc zegata w [Hz]
-    L_BODOW	    	:natural := 2000000;			-- predkosc nadawania w [bodach]
+    F_ZEGARA		:natural := 20_000_000;			-- czestotliwosc zegata w [Hz]
+    L_BODOW	    	:natural := 5_000_000;			-- predkosc nadawania w [bodach]
     B_SLOWA	 	    :natural := 8;				-- liczba bitow slowa danych (5-8)
-    B_PARZYSTOSCI	:natural := 0;				-- liczba bitow parzystosci (0-1)
+    B_PARZYSTOSCI	:natural := 1;				-- liczba bitow parzystosci (0-1)
     B_STOPOW		:natural := 2;				-- liczba bitow stopu (1-2)
     N_SERIAL		:boolean := FALSE;			-- negacja logiczna sygnalu szeregowego
     N_SLOWO		    :boolean := FALSE	;		-- negacja logiczna slowa danych
@@ -24,11 +24,15 @@ architecture behavioural of CALCULATOR_TB is
   signal   C		:std_logic := '1';			-- symulowany zegar taktujacy inicjowany na '1'
   signal   RX		:std_logic;				-- symulowane wejscie 'RX'
   signal   TX		:std_logic;				-- symulowane wyjscie 'TX'
+  signal   RX_DATA_TO_CPU		:std_logic_vector(B_SLOWA-1 downto 0);
+  signal   RX_READY_TO_CPU		:std_logic;
+  signal   CPU_RESULT_TO_TX		:std_logic_vector(B_SLOWA-1 downto 0);
+  signal   CPU_SEND_TO_TX		:std_logic;
   
   constant O_ZEGARA	:time := 1 sec/F_ZEGARA;		-- okres zegara systemowego
   constant O_BITU	:time := 1 sec/L_BODOW;			-- okres czasu trwania jednego bodu
 
-  constant ROZKAZ	:string := "123+679=";			-- sekwencja wysylanych znakow ASCII
+  constant ROZKAZ	:string := "123-200+2=";			-- sekwencja wysylanych znakow ASCII
   --constant ROZKAZ	:string := "123-"&CR&"123+678=";	-- sekwencja wysylanych znakow ASCII
   signal   WYNIK	:string(ROZKAZ'length+L_CYFR downto 1); -- sekwencja odebranych znakow ASCII
 
@@ -88,13 +92,18 @@ begin
       NEG_DATA_PAR         => N_SLOWO,				-- negacja logiczna slowa danych
       DISPLAY_SIZE         => L_CYFR				-- liczba cyfr dziesietnych
       --L_BODOW_PRZERWY      => L_BODOW_PRZERWY			-- czas przerwy w nadawaniu w [bodach]
-
+        
     )                      
     port map (             
       RESET                    => R,				-- sygnal resetowania
       CLOCK                    => C,				-- zegar taktujacy
       RX                   => RX,				-- odbierany sygnal szeregowy
-      TX                   => TX				-- wysylany sygnal szeregowy
+      TX                   => TX,				-- wysylany sygnal szeregowy
+      
+    RX_DATA_TO_CPU => RX_DATA_TO_CPU,
+        RX_READY_TO_CPU  => RX_READY_TO_CPU,
+        CPU_RESULT_TO_TX   =>CPU_RESULT_TO_TX,
+        CPU_SEND_TO_TX    => CPU_SEND_TO_TX
    );
 
   process is							-- proces bezwarunkowy

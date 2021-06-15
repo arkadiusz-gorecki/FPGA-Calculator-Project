@@ -3,13 +3,13 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity SERIAL_RX is
     generic (
-        CLOCK_F : natural := 20_000_000;
-        BAUDRATE : natural := 9600;
-        DATA_L : natural := 8 ; -- (5-8) data length, how many bits
-        PARITY_L : natural := 1; -- 0 or 1, parity bits length, informs whether we should read the parity bit after data transmission
-        STOP_L : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
-        NEG_RX : boolean := FALSE; -- if input RxD signal is negated
-        NEG_DATA_PAR : boolean := FALSE -- if input DATA and PARITY bits are negated
+        constant CLOCK_F : natural := 20_000_000;
+        constant BAUDRATE : natural := 5_000_000;
+        constant DATA_L : natural := 8 ; -- (5-8) data length, how many bits
+        constant PARITY_L : natural := 1; -- 0 or 1, parity bits length, informs whether we should read the parity bit after data transmission
+        constant STOP_L : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
+        constant NEG_RX : boolean := FALSE; -- if input RxD signal is negated
+        constant NEG_DATA_PAR : boolean := FALSE -- if input DATA and PARITY bits are negated
     );
     port (
         RESET : in std_logic;
@@ -52,6 +52,7 @@ begin
             if(NEG_RX = TRUE) then RX_BUF := not(RX); end if;
             
             if waiting = '1' then
+                READY <= '0';
                 if RX_BUF = '1' then
                     -- reseting variables for the next data
                     data_read := 0;

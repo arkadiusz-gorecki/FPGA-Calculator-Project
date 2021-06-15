@@ -5,13 +5,13 @@ use ieee.numeric_std.all;
 
 entity SERIAL_TX is
     generic (
-        CLOCK_F      : natural := 20_000_000;
-        BAUDRATE     : natural := 9600;
-        DATA_L       : natural := 8 ; -- (5-8) data length, how many bits
-        PARITY_L     : natural := 1; -- 0 or 1, parity bits length, informs whether we should write the parity bit after data transmission
-        STOP_L       : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
-        NEG_TX       : boolean := FALSE; -- if output TxD signal is negated
-        NEG_DATA_PAR : boolean := FALSE -- if output DATA and PARITY bits are negated
+        constant CLOCK_F      : natural := 20_000_000;
+        constant BAUDRATE     : natural := 5_000_000;
+        constant DATA_L       : natural := 8 ; -- (5-8) data length, how many bits
+        constant PARITY_L     : natural := 1; -- 0 or 1, parity bits length, informs whether we should write the parity bit after data transmission
+        constant STOP_L       : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
+        constant NEG_TX       : boolean := FALSE; -- if output TxD signal is negated
+        constant NEG_DATA_PAR : boolean := FALSE -- if output DATA and PARITY bits are negated
     );
     port (
         RESET     : in std_logic;
@@ -31,6 +31,7 @@ architecture Behavioural of SERIAL_TX is
 begin
     process(CLOCK, RESET)
         variable bit_1_even_count : std_logic := '0'; -- parity check
+        variable DATA_BUF : std_logic_vector (DATA_L - 1 downto 0);
         variable TX_BUF : std_logic;
         variable state : tx_state; -- obecny stan
         variable ticker : natural; -- licznik taktów zegara
@@ -61,6 +62,7 @@ begin
                     if (SEND = '1') then
                         SENDING <= '1'; -- zaczynamy transmisjê
                         TX_BUF := '1';  -- wyœlij bit startu
+                        DATA_BUF := DATA;
                         if (NEG_TX) then TX_BUF := '0'; end if;   
                         state := send_data; -- zmieñ stan
                     end if;
@@ -69,11 +71,11 @@ begin
                     if ticker >= T then -- odczekaj a¿ bêdziesz móg³ wys³aæ kolejny bit
                         ticker := 0;
                         
-                        if DATA(data_counter) = '1' then
+                        if DATA_BUF(data_counter) = '1' then
                             bit_1_even_count := not bit_1_even_count;
                         end if;
                         
-                        TX_BUF := neg(DATA(data_counter));
+                        TX_BUF := neg(DATA_BUF(data_counter));
                         
                         data_counter := data_counter + 1;
                         if (data_counter >= DATA_L) then -- jeœli wys³aliœmy ju¿ ca³¹ dan¹ (8 bitów)
@@ -113,6 +115,7 @@ begin
                         ticker := 0;
                         
                         state := idle;
+                        DATA_BUF := (others => '0');
                         SENDING <= '0'; -- koniec transmisji
                         bit_1_even_count := '0';
                     end if;
