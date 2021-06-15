@@ -44,7 +44,7 @@ begin
     variable ticks_count : natural; -- liczba wys�anych ju� bit�w jednej cyfry wyniku do TX
     variable result_count : natural; -- liczba wys�anych ju� cyfr wyniku do TX
     variable is_first_bit : boolean := true; 
-    variable digits_count : integer;
+    variable digits_count : integer := 1;
     variable sum_copy : integer;
     constant ERR_VECTOR : std_logic_vector (DATA_L - 1 downto 0) := (others => 'X');
     constant ZEROS_VECTOR : std_logic_vector (DATA_L - 1 downto 0) := (others => '0');
@@ -97,7 +97,7 @@ begin
           when first_num =>
             if (input > 47 and input < 58) then -- je�li cyfra
               current_number := add_digit(current_number, input);
-            elsif (input = 43 or input = 45 or input = 61) then -- znaki + - =
+            elsif (input = 43 or input = 45 or input = 61 or input = 42) then -- znaki + - = *
               if (is_current_number_negative = true) then
                 current_number := current_number * (-1);
               end if;
@@ -123,11 +123,13 @@ begin
           when other_num =>
             if (input > 47 and input < 58) then -- je�li cyfra
               current_number := add_digit(current_number, input);
-            elsif (input = 43 or input = 45 or input = 61) then -- znaki + - =
+            elsif (input = 43 or input = 45 or input = 61 or input = 42) then -- znaki + - = *
               if current_operation = 43 then -- dodawanie do sumy
                 current_sum := current_sum + current_number;
               elsif current_operation = 45 then -- odejmowanie od sumy
                 current_sum := current_sum - current_number;
+              elsif current_operation = 42 then -- mnozenie
+                current_sum := current_sum * current_number;
               end if;
               current_number := 0;
               current_operation := input; -- zapami�taj operacj� na przysz�o��
