@@ -10,102 +10,99 @@ use work.utils.all;
 entity COMPUTE_UNIT is
   generic (
     constant CLOCK_F : natural := 20_000_000;
-    constant BAUDRATE : natural := 5_000_000; -- liczba bitow stopu (1-2)
-    constant DATA_L : natural := 8; -- (5-8) data length, how many bits
+    constant BAUDRATE : natural := 5_000_000;
+    constant DATA_L : natural := 8; -- liczba bitów jednej danej
     constant PARITY_L : natural := 1; -- liczba bitow parzystosci (0-1)
-    constant STOP_L : natural := 2; -- liczba bitow stopu (1-2)
-    constant DISPLAY_SIZE : natural := 10 -- display size, max digit count of calculations
-
+    constant STOP_L : natural := 2 -- liczba bitow stopu (1-2)
   );
   port (
     CLOCK : in std_logic;
     RESET : in std_logic;
-    DATA : in std_logic_vector (DATA_L - 1 downto 0);
-    READY : in std_logic;
+    DATA : in std_logic_vector (DATA_L - 1 downto 0); -- dana wejsciowa (cyfra, operacja)
+    READY : in std_logic; -- informacja od RX ¿eby odebraæ jedn¹ dan¹
 
-    RESULT : out std_logic_vector (DATA_L - 1 downto 0);
-    SEND : out std_logic
+    RESULT : out std_logic_vector (DATA_L - 1 downto 0); -- dana wyjœciowa, wynik obliczenia
+    SEND : out std_logic -- informacja dla TX ¿eby odebra³ wynik
   );
 end COMPUTE_UNIT;
 
 architecture Behavioral of COMPUTE_UNIT is
   type cpu_state is (start, first_num, operand, other_num, send_result);
-  constant T : natural := CLOCK_F / BAUDRATE; -- liczba taktów zegara w  czasie których jeden bit danej jest dostêpny
-  constant ticks : natural := (1 + DATA_L + PARITY_L + STOP_L + 1) * T; -- jak d³ugo dana powinna byæ wystawiona do tx (+1 to bit startu)
---  constant ticks : natural := (1 + PARITY_L + STOP_L) * T; -- jak d³ugo dana powinna byæ wystawiona do tx (+1 to bit startu)
-  --    constant bit_time :time := 1 sec/BAUDRATE;
-  constant result_length : natural := 1; -- liczba taktów zegara w  czasie których jeden bit danej jest dostêpny
-  --    constant bits_time :time := bits * bit_time;			-- okres czasu trwania jednego bodu
+  constant T : natural := CLOCK_F / BAUDRATE; -- liczba taktów zegara w czasie których jeden bit danej jest dostêpny
+  constant ticks : natural := (1 + DATA_L + PARITY_L + STOP_L + 1) * T; -- jak d³ugo dana powinna byæ wystawiona do TX (+1 bit startu, +1 przerwa)
 begin
   process (CLOCK, RESET) is
-    variable input : std_logic_vector (DATA_L - 1 downto 0);
-    variable digit_sum : std_logic_vector (DATA_L - 1 downto 0);
-    variable carry : std_logic_vector (DATA_L - 1 downto 0) := (others => '0');
-    constant zero_digit_vector : std_logic_vector (DATA_L - 1 downto 0) := "00110000";
+    variable input : std_logic_vector (DATA_L - 1 downto 0); -- bufor na dan¹ wejœciow¹ (cyfra, operacja)
 
     variable current_sum : integer;
+    variable is_sum_zero : boolean := false; -- czy suma jest równa 0
     variable current_number : integer;
     variable is_current_number_negative : boolean := FALSE;
     variable current_operation : std_logic_vector (DATA_L - 1 downto 0);
     variable state : cpu_state := start;
-    variable znak : character;
     variable cyfra : integer;
-    variable ticks_count : natural; -- liczba wys³anych ju¿ bitów obecnej danej
-    variable result_count : natural; -- liczba wys³anych ju¿ bitów obecnej danej
-    variable is_first_bit : boolean := true;
-    variable is_sum_zero : boolean := false;
-    constant err_vector : std_logic_vector (DATA_L - 1 downto 0) := "XXXXXXXX";
-    procedure err_and_reset is
+    variable ticks_count : natural; -- liczba wys³anych ju¿ bitów jednej cyfry wyniku do TX
+    variable result_count : natural; -- liczba wys³anych ju¿ cyfr wyniku do TX
+    variable is_first_bit : boolean := true; 
+    constant ERR_VECTOR : std_logic_vector (DATA_L - 1 downto 0) := (others => 'X');
+    constant ZEROS_VECTOR : std_logic_vector (DATA_L - 1 downto 0) := (others => '0');
+    procedure err_and_reset is -- daj b³¹d na sygna³ i zresetuj komponent
     begin
-      RESULT <= err_vector;
+      RESULT <= ERR_VECTOR;
       SEND <= '1';
       state := start;
       current_sum := 0;
       current_number := 0;
-      is_current_number_negative := FALSE;
+      is_current_number_negative := false;
+        ticks_count := 0;
+        is_sum_zero := false;
     end procedure;
     function add_digit(number : natural; digit : std_logic_vector) return natural is -- przesuniêcie znakow liczby w prawo i dodanie cyfry
     begin
       return number * 10 + (CONV_INTEGER(digit) - character'pos('0'));
     end function;
-    function kod_znaku(c : character) return std_logic_vector is -- konwersja kodu znaku do rozmiaru slowa
-    begin -- cialo funkcji
-      return("00000000" + character'pos(c)); -- wyznaczenia i zwrocenie wartosci slowa
+    function char_to_binary(c : character) return std_logic_vector is -- konwersja znaku do binarnej reprezentacji kodu ASCII
+    begin
+      return(ZEROS_VECTOR + character'pos(c));
     end function;
   begin
     if (RESET = '1') then
       state := start;
+        current_sum := 0;
+        current_number := 0;
+        is_current_number_negative := false;
+        ticks_count := 0;
+        is_sum_zero := false;
     elsif (rising_edge(CLOCK)) then
       if (READY = '1') then
         input := DATA;
         case state is
           when start =>
-            -- reset for new data
+            -- reset dla nowej danej
             current_sum := 0;
             current_number := 0;
-            is_current_number_negative := FALSE;
+            is_current_number_negative := false;
 
-            -- handle only minus sign for first number
-            if (input = 45) then -- minus sign
-              is_current_number_negative := TRUE;
+            if (input = 45) then -- znak minus
+              is_current_number_negative := true;
               state := first_num;
-            elsif (47 < input and input < 58) then -- it's a digit
+            elsif (47 < input and input < 58) then -- jeœli cyfra
               current_number := add_digit(current_number, input);
               state := first_num;
             else
               err_and_reset;
             end if;
           when first_num =>
-            if (input > 47 and input < 58) then -- it's a digit
+            if (input > 47 and input < 58) then -- jeœli cyfra
               current_number := add_digit(current_number, input);
-            elsif (input = 43 or input = 45 or input = 61) then -- sign + - =
-              if (is_current_number_negative = TRUE) then
+            elsif (input = 43 or input = 45 or input = 61) then -- znaki + - =
+              if (is_current_number_negative = true) then
                 current_number := current_number * (-1);
               end if;
 
               current_sum := current_sum + current_number;
               current_number := 0;
-              current_operation := input;
+              current_operation := input; -- zapamiêtaj operacjê na przysz³oœæ
               state := operand;
               if (input = 61) then
                 if(current_sum = 0) then
@@ -115,30 +112,29 @@ begin
               end if;
             end if;
           when operand =>
-            if (input > 47 and input < 58) then -- it's a digit
+            if (input > 47 and input < 58) then -- jeœli cyfra
               current_number := add_digit(current_number, input);
               state := other_num;
             else
               err_and_reset;
             end if;
           when other_num =>
-            if (input > 47 and input < 58) then -- it's a digit
+            if (input > 47 and input < 58) then -- jeœli cyfra
               current_number := add_digit(current_number, input);
-            elsif (input = 43 or input = 45 or input = 61) then
-              if current_operation = 43 then
+            elsif (input = 43 or input = 45 or input = 61) then -- znaki + - =
+              if current_operation = 43 then -- dodawanie do sumy
                 current_sum := current_sum + current_number;
-              elsif current_operation = 45 then
+              elsif current_operation = 45 then -- odejmowanie od sumy
                 current_sum := current_sum - current_number;
               end if;
               current_number := 0;
-              current_operation := input;
+              current_operation := input; -- zapamiêtaj operacjê na przysz³oœæ
               state := operand;
-              if (input = 61) then
+              if (input = 61) then -- znak =
                 if(current_sum = 0) then
                     is_sum_zero := true;
                 end if;
                 state := send_result;
-                --SEND <= '1';
               end if;
             else
               err_and_reset;
@@ -151,21 +147,21 @@ begin
           if (current_sum /= 0) then -- dopóki nie zredukowa³o siê do zera
             ticks_count := ticks_count + 1;
             
-            if(is_first_bit) then
+            if(is_first_bit) then -- pierwsza cyfra (lub znak minus) wyniku
                 is_first_bit := false;
                 if current_sum < 0 then -- liczba ujemna wiêc wypisz minus
-                    RESULT <= "00000000" + character'pos('-');
+                    RESULT <= ZEROS_VECTOR + character'pos('-');
                     current_sum := abs(current_sum);
                 else -- pierwsza cyfra
-                    cyfra := current_sum mod 10;
-                    current_sum := current_sum / 10;
-                    RESULT <= "00000000" + character'pos('0') + cyfra;
+                    cyfra := current_sum mod 10; -- zapisz cyfrê jednoœci
+                    current_sum := current_sum / 10; -- przesuñ cyfry w prawo
+                    RESULT <= ZEROS_VECTOR + character'pos('0') + cyfra;
                 end if;
                 SEND <= '1';
-            elsif ticks_count >= ticks then
-              cyfra := current_sum mod 10;
+            elsif ticks_count >= ticks then -- odliczaj takty zegara
+              cyfra := current_sum mod 10; -- nastêpna cyfra wyniku
               current_sum := current_sum / 10;
-              RESULT <= "00000000" + character'pos('0') + cyfra;
+              RESULT <= ZEROS_VECTOR + character'pos('0') + cyfra;
               SEND <= '1';
               ticks_count := 0;
               result_count := result_count + 1;
@@ -175,10 +171,10 @@ begin
             end if;
           elsif is_sum_zero then
             is_sum_zero := false;
-            RESULT <= "00000000" + character'pos('0');
+            RESULT <= ZEROS_VECTOR + character'pos('0');
             SEND <= '1';
           else
-            is_first_bit := true; -- zresetowanie
+            is_first_bit := true;
             result_count := 0;
             SEND <= '0';
             RESULT <= "UUUUUUUU";

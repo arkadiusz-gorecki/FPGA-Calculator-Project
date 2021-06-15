@@ -30,7 +30,7 @@ architecture Behavioural of SERIAL_TX is
 
 begin
     process(CLOCK, RESET)
-        variable bit_1_even_count : std_logic := '0'; -- parity check
+        variable bit_1_even_count : std_logic := '0'; -- czy parzysta liczba bitów
         variable DATA_BUF : std_logic_vector (DATA_L - 1 downto 0);
         variable TX_BUF : std_logic;
         variable state : tx_state; -- obecny stan
