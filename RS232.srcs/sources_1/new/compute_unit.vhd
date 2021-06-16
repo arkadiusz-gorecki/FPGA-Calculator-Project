@@ -41,7 +41,7 @@ begin
     variable cyfra : integer;
     variable ticks_count : natural; -- liczba wyslanych juz bitow jednej cyfry wyniku do TX
     variable result_count : natural; -- liczba wyslanych juz cyfr wyniku do TX
-    variable is_first_bit : boolean := true; 
+    variable is_first_bit : boolean := true;
     variable digits_count : integer := 1;
     variable sum_copy : integer;
     constant ERR_VECTOR : std_logic_vector (DATA_L - 1 downto 0) := (others => 'X');
@@ -54,8 +54,8 @@ begin
       current_sum := 0;
       current_number := 0;
       is_first_number_negative := false;
-        ticks_count := 0;
-        is_sum_zero := false;
+      ticks_count := 0;
+      is_sum_zero := false;
       digits_count := 1;
     end procedure;
     function add_digit(number : natural; digit : std_logic_vector) return natural is -- przesuniecie znakow liczby w prawo i dodanie cyfry
@@ -66,26 +66,26 @@ begin
     begin
       return(ZEROS_VECTOR + character'pos(c));
     end function;
-    function count_digits(number: integer) return integer is -- ile jest cyfr w liczbie
-        variable digits_count : integer := 1;
-        variable num_copy: integer;
+    function count_digits(number : integer) return integer is -- ile jest cyfr w liczbie
+      variable digits_count : integer := 1;
+      variable num_copy : integer;
     begin
-        num_copy := number / 10;
-        while (num_copy > 0) loop
-            digits_count := digits_count * 10;
-            num_copy := num_copy / 10;
-        end loop;
-        return digits_count;
+      num_copy := number / 10;
+      while (num_copy > 0) loop
+        digits_count := digits_count * 10;
+        num_copy := num_copy / 10;
+      end loop;
+      return digits_count;
     end function;
   begin
     if (RESET = '1') then
       state := start;
-        current_sum := 0;
-        current_number := 0;
-        is_first_number_negative := false;
-        ticks_count := 0;
-        is_sum_zero := false;
-        digits_count := 1;
+      current_sum := 0;
+      current_number := 0;
+      is_first_number_negative := false;
+      ticks_count := 0;
+      is_sum_zero := false;
+      digits_count := 1;
     elsif (rising_edge(CLOCK)) then
       if (READY = '1') then
         input := DATA;
@@ -118,8 +118,8 @@ begin
               current_operation := input; -- zapamietaj operacje na przyszlosc
               state := operand;
               if (input = 61) then
-                if(current_sum = 0) then
-                    is_sum_zero := true;
+                if (current_sum = 0) then
+                  is_sum_zero := true;
                 end if;
                 state := send_result;
               end if;
@@ -146,8 +146,8 @@ begin
               current_operation := input; -- zapamietaj operacje na przyszlosc
               state := operand;
               if (input = 61) then -- znak =
-                if(current_sum = 0) then
-                    is_sum_zero := true;
+                if (current_sum = 0) then
+                  is_sum_zero := true;
                 end if;
                 state := send_result;
               end if;
@@ -158,24 +158,24 @@ begin
         end case;
       else
         if (state = send_result) then
-                  
+
           if (digits_count /= 0) then -- dopoki nie zredukowalo sie do zera
             ticks_count := ticks_count + 1;
-            
-            if(is_first_bit) then -- pierwsza cyfra (lub znak minus) wyniku
-                is_first_bit := false;
-                if current_sum < 0 then -- liczba ujemna wiec wypisz minus
-                    RESULT <= ZEROS_VECTOR + character'pos('-');
-                    current_sum := abs(current_sum);
-                    digits_count := count_digits(current_sum);
-                else -- pierwsza cyfra
-                    digits_count := count_digits(current_sum);
-                    cyfra := current_sum / digits_count; -- nastepna cyfra wyniku
-                    current_sum := current_sum - (cyfra * digits_count);
-                    digits_count := digits_count / 10;
-              RESULT <= ZEROS_VECTOR + character'pos('0') + cyfra;
-                end if;
-                SEND <= '1';
+
+            if (is_first_bit) then -- pierwsza cyfra (lub znak minus) wyniku
+              is_first_bit := false;
+              if current_sum < 0 then -- liczba ujemna wiec wypisz minus
+                RESULT <= ZEROS_VECTOR + character'pos('-');
+                current_sum := abs(current_sum);
+                digits_count := count_digits(current_sum);
+              else -- pierwsza cyfra
+                digits_count := count_digits(current_sum);
+                cyfra := current_sum / digits_count; -- nastepna cyfra wyniku
+                current_sum := current_sum - (cyfra * digits_count);
+                digits_count := digits_count / 10;
+                RESULT <= ZEROS_VECTOR + character'pos('0') + cyfra;
+              end if;
+              SEND <= '1';
             elsif ticks_count >= ticks then -- odliczaj takty zegara
               cyfra := current_sum / digits_count; -- nastepna cyfra wyniku
               current_sum := current_sum - (cyfra * digits_count);

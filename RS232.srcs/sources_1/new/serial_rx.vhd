@@ -1,11 +1,11 @@
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_1164.all;
 
 entity SERIAL_RX is
     generic (
         constant CLOCK_F : natural := 20_000_000;
         constant BAUDRATE : natural := 5_000_000;
-        constant DATA_L : natural := 8 ; -- (5-8) data length, how many bits
+        constant DATA_L : natural := 8; -- (5-8) data length, how many bits
         constant PARITY_L : natural := 1; -- 0 or 1, parity bits length, informs whether we should read the parity bit after data transmission
         constant STOP_L : natural := 2; -- 1 or 2, stop bits length, how many ending bits after data transmission
         constant NEG_RX : boolean := FALSE; -- if input RxD signal is negated
@@ -15,10 +15,10 @@ entity SERIAL_RX is
         RESET : in std_logic;
         CLOCK : in std_logic;
         RX : in std_logic;
-        
+
         DATA : out std_logic_vector (DATA_L - 1 downto 0);
         READY : out std_logic;
-        ERR :out std_logic
+        ERR : out std_logic
     );
 end SERIAL_RX;
 
@@ -29,7 +29,7 @@ architecture Behavioral of SERIAL_RX is
     signal parity : std_logic := '0';
     signal stop : std_logic := '0';
 begin
-    process(RESET, CLOCK) is
+    process (RESET, CLOCK) is
         constant T : natural := CLOCK_F / BAUDRATE; -- clock ticks per one bit availability frame
         variable currT : natural := 0; -- how many clock ticks have passed already
         variable data_read : natural := 0; -- how many Rx data bits are already read
@@ -49,8 +49,10 @@ begin
             bit_1_count := 0;
         elsif rising_edge(CLOCK) then
             RX_BUF := RX;
-            if(NEG_RX = TRUE) then RX_BUF := not(RX); end if;
-            
+            if (NEG_RX = TRUE) then
+                RX_BUF := not(RX);
+            end if;
+
             if waiting = '1' then
                 READY <= '0';
                 if RX_BUF = '1' then
@@ -81,12 +83,16 @@ begin
                     case NEG_DATA_PAR is
                         when FALSE =>
                             DATA(data_read) <= RX_BUF; -- write one input bit to output vector
-                            if RX_BUF = '1' then bit_1_count := bit_1_count + 1; end if; -- count how many '1' bits there are (needed for parity check)  
+                            if RX_BUF = '1' then
+                                bit_1_count := bit_1_count + 1;
+                            end if; -- count how many '1' bits there are (needed for parity check)  
                         when TRUE => -- same as previous but RX is negated
                             DATA(data_read) <= not(RX_BUF);
-                            if RX_BUF = '0' then bit_1_count := bit_1_count + 1; end if;
+                            if RX_BUF = '0' then
+                                bit_1_count := bit_1_count + 1;
+                            end if;
                     end case;
-                    
+
                     data_read := data_read + 1;
                     if data_read >= DATA_L then
                         read <= '0';
@@ -94,46 +100,48 @@ begin
                             parity <= '1';
                         else
                             stop <= '1';
-                        end if;                        
-                    end if;     
-                end if;   
+                        end if;
+                    end if;
+                end if;
             end if;
             if parity = '1' then
                 currT := currT + 1;
-                
+
                 if currT >= T then
                     currT := 0;
                     case NEG_DATA_PAR is
                         when FALSE =>
                             if (RX_BUF = '0' and bit_1_count mod 2 = 1) or
-                               (RX_BUF = '1' and bit_1_count mod 2 = 0) then
-                               ERR <= '1';
+                                (RX_BUF = '1' and bit_1_count mod 2 = 0) then
+                                ERR <= '1';
                             end if;
                         when TRUE =>
                             if (RX_BUF = '1' and bit_1_count mod 2 = 1) or
-                               (RX_BUF = '0' and bit_1_count mod 2 = 0) then
-                               ERR <= '1';
+                                (RX_BUF = '0' and bit_1_count mod 2 = 0) then
+                                ERR <= '1';
                             end if;
                     end case;
                     parity <= '0';
                     stop <= '1';
-                end if;  
+                end if;
             end if;
             if stop = '1' then
                 currT := currT + 1;
-                
+
                 if currT >= T then
                     currT := 0;
-                    if RX_BUF = '1' then ERR <= '1'; end if;
+                    if RX_BUF = '1' then
+                        ERR <= '1';
+                    end if;
                     stop_read := stop_read + 1; -- how many stop bits already read
                     if stop_read >= STOP_L then
                         stop <= '0';
                         waiting <= '1';
                         READY <= '1'; -- the data is ready to be read
-                    end if;     
-                end if;           
+                    end if;
+                end if;
             end if;
         end if;
-        
+
     end process;
 end Behavioral;
